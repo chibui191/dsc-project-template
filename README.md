@@ -86,15 +86,15 @@ chest_xray
 ```
 
 ### Data Preview
-![Normal X-ray Sample]('./data/CellData/chest_xray/train/NORMAL/NORMAL-239549-0001.jpeg')
+![Normal X-ray Sample](./images/NORMAL-1070073-0001.jpeg)
 
-![Bacteria Pneumonia Sample]('./data/CellData/chest_xray/train/PNEUMONIA/BACTERIA-155541-0004.jpeg')
+![Bacteria Pneumonia Sample](./images/BACTERIA-213622-0002.jpeg)
 
-![Viral Pneumonia Sample]('./data/CellData/chest_xray/train/PNEUMONIA/VIRUS-614452-0001.jpeg')
+![Viral Pneumonia Sample](./images/VIRUS-1980593-0002.jpeg)
 
 Although a printout of these images' shapes indicate that they're composed of 3 channels (RGB), a comparison of 3 layers' numerical values are exactly the same.
 
-![Image Layer Separation]('./images/img_breakdown.png')
+![Image Layer Separation](./images/img_breakdown.png)
 
 For this reason, moving forward, I would set `ImageDataGenerator()`'s `color_mode` to `grayscale` to downsize the dataset, while still retaining the same amount of information.
 
@@ -112,7 +112,7 @@ In addition, due to a potential "mislabeling" issue in the test data (which has 
 
 After joining, in total we have 5856 images, out of which Pneumonia takes up 72.9%.
 
-![Class composition]('./images/class_ratio.png')
+![Class composition](./images/class_ratio.png)
 
 #### Pneumonia Types
 
@@ -122,7 +122,7 @@ Within the Pneumonia class itself, there are two different types: Bacteria and V
 
 These differences would potentially impact the models' capabilities to differentiate the X-ray images; therefore it might be valuable to include this information in the model evaluation. This would not be the main focus of this project, but it would certainly provide some information for us to dig deeper into this topic in the future, and perhaps train models to classify different types of Pneumonia.
 
-![Type composition]('./images/composition.png')
+![Type composition](./images/composition.png)
 
 4273 datapoints in our master dataset are categorized as PNEUMONIA, which accounts for roughly 73% of the whole set: 
 
@@ -142,7 +142,7 @@ My models would be trained mainly on the training set, and also exposed to the v
 
 ### Data Visualization
 
-![First 16 samples of the first training batch]('./images/samples_16.png')
+![First 16 samples of the first training batch](./images/samples_16.png)
 
 
 ## Modeling
@@ -171,6 +171,8 @@ Since we're working with an imbalanced dataset with the majority being Pneumonia
 
 From the business stand point, a model trained on imbalanced data like this is not entirely bad, because it would reduce the risk of mis-classifying PNEUMONIA cases as NORMAL. Although that could cause some inconveniencies to the patients, it would helps ensure higher chance of catching the disease early. However, not correcting class imbalance could also lead to models not learning to differentiate images of the 2 classes efficiently and not picking up the important features of the images.
 
+Please refer to the [final notebook] for more details on the first 3 models (`baseline`, `cnn_2`, and `cnn_3`) that I have trained prior to the final model `cnn_4` using Transfer Learnng with ResNet50.
+
 ### Final Model: Transfer Learning with ResNet50
 
 **ResNet** or **Residual Network** is one of the most powerful deep neural networks: it helped Kaiming He et al. win the ILSVRC in 2015. The winning variant used an extremely deep CNN with 152 layers; but I'm just going to use ResNet50, which is composed of 48 Convolutional Layers, 1 Max Pool, and 1 Average Pool layer.
@@ -185,3 +187,177 @@ The goal of training a neural network is to make it model a target function `h(x
 
 ![resnet skip connection](./images/resnet_skip_conn.png)
 
+#### Model Construction
+
+Pretrained models like ResNet are readily available with a single line of code in the `keras.applications` package; therefore we don't have to implement them from scratch.
+
+By default, ResNet takes input shape of (224, 224, 3). Therefore even though I used grayscale for my first 3 models, I had to recreate Image Data Generator with `color_mode = rgb` to match pretrained models' expected input format.
+
+We can load the ResNet50 model that has been pretrained on ImageNet as follows:
+```
+resnet = ResNet50(include_top=False, 
+                  weights='imagenet', 
+                  input_shape=(INPUT_SHAPE))
+```
+We exclude the top layers (the global average pooling layer & the dense output layer) of the network by setting `include_top=False`.
+
+Then we add our own global average pooling layer based on the output of `resnet` base model, and finally followed by a dense output layer with 1 unit using the `sigmoid` activation function.
+```
+# APPLY OUR OWN GLOBAL MAXPOOLING BASED ON THE OUTPUT OF resnet
+gmp = GlobalAveragePooling2D()(resnet.output)
+
+# ADD FINAL DENSE LAYER
+output = Dense(1, activation='sigmoid')(gmp)
+
+```
+Last but not least, to bind everything together, we create the Keras Model:
+```
+# BIND ALL 
+cnn_4 = Model(resnet.input, outputs=output)
+
+# FREEZE THE WEIGHTS OF resnet BASE MODEL 
+# SO THAT THEY'RE NON-TRAINABLE
+for layer in resnet.layers:
+    layer.trainable = False
+```
+Since the new output layer was initialized randomly, it would make larger errors, which could damage the pretrained weights. Therefore, it's usualy a good idea to freeze the pretrained layers during the first few epochs. That way the new layer has some time to learn some decent weights (validation accuracy in the 70-80% range).
+
+Then we can compile the model:
+
+```
+# USING SGD TO CUSTOMIZE LEARNING RATE
+sgd = SGD(lr=0.02, decay=0.01, momentum=0.9)
+cnn_4.compile(optimizer=sgd, 
+              loss='binary_crossentropy',
+              metrics=['accuracy', recall, precision])
+cnn_4.summary()
+```
+Start the beginning of training:
+
+```
+checkpoint_cb = ModelCheckpoint('cnn_4.h5',
+                                save_best_only=True,
+                                monitor='val_loss',
+                                mode='min')
+early_stopping_cb = EarlyStopping(patience=3,
+                                  restore_best_weights=True,
+                                  monitor='val_loss',
+                                  mode='min')
+
+EPOCHS = 5
+
+results_4 = cnn_4.fit(resnet_train_generator, 
+                      validation_data=resnet_val_generator,
+                      epochs=EPOCHS,
+                      class_weight=class_weight,
+                      steps_per_epoch=(resnet_train_generator.n//BATCH_SIZE),
+                      validation_steps=(resnet_val_generator.n//BATCH_SIZE),
+                      callbacks=[checkpoint_cb, early_stopping_cb])
+```
+After 5 epochs, we unfreeze the layers, recompile and continue training. For the second round of training, I reduced learning rate `lr` to 0.01 to avoid damaging the pretrained weights:
+
+```
+# UNFREEZE resnet LAYERS FOR 2ND ROUND OF TRAINING:
+for layer in resnet.layers:
+    layer.trainable = True
+    
+# REDUCING LEARNING RATE TO 0.01 TO AVOID DAMANGING THE PRETRAINED WEIGHTS
+sgd = SGD(lr=0.01, decay=0.001, momentum=0.9)
+
+# RE-COMPILE MODEL AFTER UNFREEZING ALL LAYERS
+cnn_4.compile(optimizer=sgd, 
+              loss='binary_crossentropy',
+              metrics=['accuracy', recall, precision])
+
+
+checkpoint_cb = ModelCheckpoint('cnn_4.h5',
+                                save_best_only=True,
+                                monitor='val_loss',
+                                mode='min')
+early_stopping_cb = EarlyStopping(patience=10,
+                                  restore_best_weights=True,
+                                  monitor='val_loss',
+                                  mode='min')
+
+
+# INCREASING NUMBER OF EPOCHS BACK TO 30
+EPOCHS = 30
+
+results_4 = cnn_4.fit(resnet_train_generator, 
+                      validation_data=resnet_val_generator,
+                      epochs=EPOCHS,
+                      class_weight=class_weight,
+                      steps_per_epoch=(resnet_train_generator.n//BATCH_SIZE),
+                      validation_steps=(resnet_val_generator.n//BATCH_SIZE),
+                      callbacks=[checkpoint_cb, early_stopping_cb])
+```
+
+#### Visualizing Metric Scores
+
+![Loss](./image/loss.png)
+
+![Accuracy](./image/accuracy.png)
+
+![Recall](./image/recall.png)
+
+![Precision](./image/precision.png)
+
+It's actually very interesting to see how the model appeared to be "stuck" at a local optima(?) the first 8 epochs, barely made any progress, and then turned around and increased accuracy by almost 20% from epoch 8 to epoch 9.
+
+#### Model Evaluation (on Validation Set)
+
+|    | model    |      loss |   accuracy |   recall |   precision |
+|---:|:---------|----------:|-----------:|---------:|------------:|
+|  0 | baseline | 0.0891632 |   0.964859 | 0.974114 |    0.978112 |
+|  1 | cnn_2    | 0.113521  |   0.960843 | 0.982289 |    0.965194 |
+|  2 | cnn_3    | 0.101416  |   0.968876 | 0.974114 |    0.983494 |
+|  3 | cnn_4    | 0.0569717 |   0.986948 | 0.993188 |    0.989145 |
+
+![Training set confusion matrix](./images/train_confusion_mat.png)
+
+![Validation set confusion matrix](./images/val_confusion_mat.png)
+
+False Negative cases by 3 previous models that were corrected by `cnn_4`:
+
+![Corrected False Negatives](./images/corrected_by_cnn_4.png)
+
+#### Model Evaluation (on Testing Set)
+
+![Testing set confusion matrix](./images/test_confusion_mat.png)
+
+Out of 617 actual Pneumonia X-rays, `cnn_4` was able to accurately detect 611, which gives us a very high Recall score of 99.02%. Overall, the model has an Accuracy score of 98.17% on the Test dataset.
+
+#### Grad-CAM Class Activation Visualization
+
+Neural Networks are commonly referred to as black-box models because the structure of the networks does not really give us any insights on the structure of the function modeled. 
+
+**Gradient Class Activation Map** (**Grad-CAM**) for a particular class indicates regions on the images that the CNN used to identify that class. Since this project is a binary classification task, Grad-CAM would hopefully highlight discriminative areas of the X-ray that the models used to differentiate Pneumonia vs. Normal.
+
+For this demonstration, I selected 2 of the 4 Pneumonia X-rays that all 3 previous have failed on, but yet `cnn_4` was able to correctly identified with very high probability (0.99):
+
+![Gradcam Demo 1](./images/gradcam1.png)
+
+![Gradcam Demo 2](./images/gradcam2.png)
+
+On this image, Grad-CAM output for this image shows that the model actually used most of the surrounding as the differentiating factor. It does highlight some ares in the Chest as well.
+
+Then I also selected another image in the Normal class with high probability (over 0.9):
+
+![Gradcam Demo 3](./images/gradcam3.png)
+
+and 1 more Pneumonia X-ray with high probability (over 0.9)
+
+![Gradcam Demo 4](./images/gradcam4.png)
+
+Again, the model seemed to have identified something in the lungs area, and the armpit(?). 
+
+
+## Conclusions
+
+Although the final model has achieved very high performance scores across the board (Accuracy, Recall, as well as Precision), Grad-CAM has showed us that the model is still picking up some regions outside the lungs area.
+
+Rather than purely pursuing better metric scores, it'd be best to take advantage of experts' domain knowledge, and have these Grad-CAM outputs reviewed by clinicians and radiologists who can provide input on whether or not the model has identified correct/potential regions the chest area that might be indicators of Pneumonia.
+
+### Next Steps
+
+In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar annotations, which could be very labor intensive and costly.
