@@ -49,7 +49,7 @@ For this project, I have developed and evaluated various Convolutional Neural Ne
 
 ## Dataset
 
-The dataset was collected from **Guangzhou Women and Children’s Medical Center** (Guangzhou, China) pediatric patients of one to five years old from.
+The dataset was collected from **Guangzhou Women and Children’s Medical Center** (Guangzhou, China) pediatric patients of one to five years old.
 
 The dataset is available on:
 - [Mendelay Data](https://data.mendeley.com/datasets/rscbjbr9sj/3)
