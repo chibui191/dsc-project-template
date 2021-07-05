@@ -1,4 +1,4 @@
-[!Pneumonia Detection Using Convolutional Neural Network](../images/gradcam1.png)
+![Pneumonia Detection Using Convolutional Neural Network](../images/gradcam1.png)
 
 # Pneumonia Detection Using Convolutional Neural Network
 
@@ -86,15 +86,15 @@ chest_xray
 ```
 
 ### Data Preview
-[!Normal X-ray Sample]('../data/CellData/chest_xray/train/NORMAL/NORMAL-239549-0001.jpeg')
+![Normal X-ray Sample]('../data/CellData/chest_xray/train/NORMAL/NORMAL-239549-0001.jpeg')
 
-[!Bacteria Pneumonia Sample]('../data/CellData/chest_xray/train/PNEUMONIA/BACTERIA-155541-0004.jpeg')
+![Bacteria Pneumonia Sample]('../data/CellData/chest_xray/train/PNEUMONIA/BACTERIA-155541-0004.jpeg')
 
-[!Viral Pneumonia Sample]('../data/CellData/chest_xray/train/PNEUMONIA/VIRUS-614452-0001.jpeg')
+![Viral Pneumonia Sample]('../data/CellData/chest_xray/train/PNEUMONIA/VIRUS-614452-0001.jpeg')
 
 Although a printout of these images' shapes indicate that they're composed of 3 channels (RGB), a comparison of 3 layers' numerical values are exactly the same.
 
-[!Image Layer Separation]('../images/img_breakdown.png')
+![Image Layer Separation]('../images/img_breakdown.png')
 
 For this reason, moving forward, I would set `ImageDataGenerator()`'s `color_mode` to `grayscale` to downsize the dataset, while still retaining the same amount of information.
 
@@ -112,7 +112,7 @@ In addition, due to a potential "mislabeling" issue in the test data (which has 
 
 After joining, in total we have 5856 images, out of which Pneumonia takes up 72.9%.
 
-[!Class composition]('../images/class_ratio.png')
+![Class composition]('../images/class_ratio.png')
 
 #### Pneumonia Types
 
@@ -122,7 +122,7 @@ Within the Pneumonia class itself, there are two different types: Bacteria and V
 
 These differences would potentially impact the models' capabilities to differentiate the X-ray images; therefore it might be valuable to include this information in the model evaluation. This would not be the main focus of this project, but it would certainly provide some information for us to dig deeper into this topic in the future, and perhaps train models to classify different types of Pneumonia.
 
-[!Type composition]('../images/composition.png')
+![Type composition]('../images/composition.png')
 
 4273 datapoints in our master dataset are categorized as PNEUMONIA, which accounts for roughly 73% of the whole set: 
 
@@ -142,7 +142,7 @@ My models would be trained mainly on the training set, and also exposed to the v
 
 ### Data Visualization
 
-[!First 16 samples of the first training batch]('../images/samples_16.png')
+![First 16 samples of the first training batch]('../images/samples_16.png')
 
 
 ## Modeling
