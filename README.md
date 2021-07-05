@@ -356,7 +356,7 @@ and 1 more Pneumonia X-ray with high probability (over 0.9)
 
 ![Gradcam Demo 4](./images/gradcam4.png)
 
-Again, the model seemed to have identified something in the lungs area, and the armpit(?). 
+Again, the model seemed to have highlighted the lungs area, and some surrounding like the underarm areas. 
 
 
 ## Conclusions
@@ -367,9 +367,4 @@ Rather than purely pursuing better metric scores, it'd be best to take advantage
 
 ### Next Steps
 
-In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar annotations, which could be very labor intensive and costly.
-<<<<<<< HEAD
-
-Furthermore, there's potential in developing models that can assist in classifying responsible pathogens for Pneumonia.
-=======
->>>>>>> 5d486ca5bbaf07aef05fee8d52a33d5a50b65b1b
+In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar Furthermore, there's potential in developing models that can assist in classifying responsible pathogens for Pneumonia.
