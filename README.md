@@ -116,11 +116,11 @@ After joining, in total we have 5856 images, out of which Pneumonia takes up 72.
 
 #### Pneumonia Types
 
-Within the Pneumonia class itself, there are two different types: Bacteria and Virus. These 2 subclasses that usually observed some distinctive characteristics:
+Within the Pneumonia class itself, there are two different types: Bacteria and Virus. These 2 subclasses that usually observed with some distinctive characteristics:
 - **Bacterial pneumonia** typically exhibits a focal lobar consolidation
 - whereas **Viral pneumonia** manifests with a more diffuse ‘‘interstitial’’ pattern in both lungs
 
-These differences would potentially impact the models' capabilities to differentiate the X-ray images; therefore it might be valuable to include this information in the model evaluation. This would not be the main focus of this project, but it would certainly provide some information for us to dig deeper into this topic in the future, and perhaps train models to classify different types of Pneumonia.
+These differences would potentially impact the models' capabilities to differentiate the X-ray images; therefore it might be valuable to include this information in the model evaluation. This would not be the main focus of this project, but it would certainly provide some information for us to dig deeper into this topic in the future, and perhaps train models to identify responsible Pneumonia pathogens.
 
 ![Type composition](./images/composition.png)
 
@@ -136,9 +136,11 @@ This means that we're working with a highly imbalanced dataset, and I would need
 Using `sklearn`'s `train_test_split`, I then split the master dataframe into 3 smaller sets:
 - Training (`train_df`) - used for fitting models directly
 - Valuation (`val_df`) - used for model tuning during iterations
-- Test  (`test_df`) - used for final model evaluation
+- Test (`test_df`) - used for final model evaluation
 
 My models would be trained mainly on the training set, and also exposed to the valuation set but only for the purpose of evaluating the model on a small unseen dataset.
+
+Final model would then be evaluated on the Test set.
 
 ### Data Visualization
 
@@ -153,8 +155,8 @@ My models would be trained mainly on the training set, and also exposed to the v
 Convolutional Neural Networks have proved to be highly accurate with Image Recognition tasks, partly due to its resemblence of nature.
 
 David H. Hubel and Torsten Wiesel's experiments on cats (in 1958 and 1959), and on monkeys a few years later has led them to discover some crucial insights into the structure of the visual cortex:
-- They found out that many neurons in the visual cortex have a small ***local receptive field*** (which means they only react to visual stimuli in a limited region of the visual field). The receptive fields of different neurons may overlap, and together they tile the whole visual field.
-- In addition, some neurons react only to images of horizontal lines, while others react to lines with different orientations (two neurons with the same receptive field might detect different line orientations). 
+- They found out that many neurons in the visual cortex have a small ***local receptive field*** (which means they only react to visual stimuli in a limited region of the visual field). The receptive fields of different neurons may overlap, they work together to create the whole visual field.
+- In addition, some neurons react only to images of horizontal lines, while others react to lines with other orientations (two neurons with the same receptive field might detect different line orientations). 
 
 These studies of the visual cortex had inspired the **neocognitron** in the 80s, which gradually evolved into modern **convolutional neural networks**.
 
@@ -165,13 +167,13 @@ Convolutional Layer is the building block of CNN. Neurons in the 1st convolution
 The goal of pooling layer is to *subsample* the input image inorder to reduce computational load, memory usage, and number of parameters.
 
 ### Metrics
-Since the objective of this project is to create a model that helps speed up the diagnosis of Pneumonia and the Accuracy for a highly imbalanced dataset could be skewed, prioritizing a high Recall score and reducing the number of False Negatives (actual Pneumonia cases that are classified as Normal) would be my main goal as I go through model iterations.
+Since the objective of this project is to create computer-aided detection model that helps speed up the diagnosis of Pneumonia, and the Accuracy for a highly imbalanced dataset could be skewed, prioritizing a high Recall score and reducing the number of False Negatives (actual Pneumonia cases that are classified as Normal) would be my main goal as I go through model iterations.
 
-Since we're working with an imbalanced dataset with the majority being Pneumonia, a model that predicts everything as Pneumonia would have approx. 73% accuracy (depending on the class ratio of the evaluation set this might vary more or less). If not corrected, models trained on the imbalanced dataset would have the tendency to predict more of the abundant class (which is 1-PNEUMONIA in this case). 
+As this is an imbalanced dataset with the majority being Pneumonia, a model that predicts everything as Pneumonia would have approx. 73% accuracy (depending on the class ratio of the evaluation set this might vary more or less). If not corrected, models trained on imbalanced dataset would have the tendency to predict more of the abundant class (which is 1-PNEUMONIA in this case). 
 
-From the business stand point, a model trained on imbalanced data like this is not entirely bad, because it would reduce the risk of mis-classifying PNEUMONIA cases as NORMAL. Although that could cause some inconveniencies to the patients, it would helps ensure higher chance of catching the disease early. However, not correcting class imbalance could also lead to models not learning to differentiate images of the 2 classes efficiently and not picking up the important features of the images.
+From the business stand point, a model that predicts more Pneumonia is not entirely bad, because it would reduce the risk of mis-classifying PNEUMONIA cases as NORMAL. Although that could cause some inconveniencies to some people, it would helps ensure higher chance of catching the disease early. However, not correcting class imbalance could also lead to models not learning to differentiate images of the 2 classes efficiently and not picking up the important features of the images.
 
-Please refer to the [final notebook] for more details on the first 3 models (`baseline`, `cnn_2`, and `cnn_3`) that I have trained prior to the final model `cnn_4` using Transfer Learnng with ResNet50.
+Please refer to the [final notebook](./reports/report-notebook.ipynb) for more details on the first 3 models (`baseline`, `cnn_2`, and `cnn_3`) that I have trained prior to the final model `cnn_4` using Transfer Learning with ResNet50.
 
 ### Final Model: Transfer Learning with ResNet50
 
@@ -208,7 +210,6 @@ gmp = GlobalAveragePooling2D()(resnet.output)
 
 # ADD FINAL DENSE LAYER
 output = Dense(1, activation='sigmoid')(gmp)
-
 ```
 Last but not least, to bind everything together, we create the Keras Model:
 ```
@@ -294,13 +295,13 @@ results_4 = cnn_4.fit(resnet_train_generator,
 
 #### Visualizing Metric Scores
 
-![Loss](./image/loss.png)
+![Loss](./images/loss.png)
 
-![Accuracy](./image/accuracy.png)
+![Accuracy](./images/accuracy.png)
 
-![Recall](./image/recall.png)
+![Recall](./images/recall.png)
 
-![Precision](./image/precision.png)
+![Precision](./images/precision.png)
 
 It's actually very interesting to see how the model appeared to be "stuck" at a local optima(?) the first 8 epochs, barely made any progress, and then turned around and increased accuracy by almost 20% from epoch 8 to epoch 9.
 
@@ -313,13 +314,19 @@ It's actually very interesting to see how the model appeared to be "stuck" at a 
 |  2 | cnn_3    | 0.101416  |   0.968876 | 0.974114 |    0.983494 |
 |  3 | cnn_4    | 0.0569717 |   0.986948 | 0.993188 |    0.989145 |
 
+Although all 4 models have very high overall accuracy, `cnn_4` has higher Accuracy, Recall and Precision across the board.
+
 ![Training set confusion matrix](./images/train_confusion_mat.png)
 
 ![Validation set confusion matrix](./images/val_confusion_mat.png)
 
-False Negative cases by 3 previous models that were corrected by `cnn_4`:
+Printouts of the confusion matrices (Training vs. Validation set) shows that there's some overfitting (the model has a 100% accuracy on the training set, and 98.69% on the Validation set). Yet this gap is relatively small.
+
+We can also look at the False Negative cases by 3 previous models that were corrected by `cnn_4`:
 
 ![Corrected False Negatives](./images/corrected_by_cnn_4.png)
+
+2 out of 4 images have a probability prediction of 0.999. It would be interesting to later see what the model deemed to be discriminative features of these images.
 
 #### Model Evaluation (on Testing Set)
 
@@ -329,7 +336,7 @@ Out of 617 actual Pneumonia X-rays, `cnn_4` was able to accurately detect 611, w
 
 #### Grad-CAM Class Activation Visualization
 
-Neural Networks are commonly referred to as black-box models because the structure of the networks does not really give us any insights on the structure of the function modeled. 
+Neural Networks are commonly referred to as black-box models because the structure of the networks does not really give us any insights on the structure of the function modeled as well as its relationship with the independent features. 
 
 **Gradient Class Activation Map** (**Grad-CAM**) for a particular class indicates regions on the images that the CNN used to identify that class. Since this project is a binary classification task, Grad-CAM would hopefully highlight discriminative areas of the X-ray that the models used to differentiate Pneumonia vs. Normal.
 
@@ -339,7 +346,7 @@ For this demonstration, I selected 2 of the 4 Pneumonia X-rays that all 3 previo
 
 ![Gradcam Demo 2](./images/gradcam2.png)
 
-On this image, Grad-CAM output for this image shows that the model actually used most of the surrounding as the differentiating factor. It does highlight some ares in the Chest as well.
+On this image, Grad-CAM output for this image shows that the model actually used most of the surrounding as the differentiating factor. It does highlight some areas in the chest and in the middle of the spine as well.
 
 Then I also selected another image in the Normal class with high probability (over 0.9):
 
@@ -354,10 +361,12 @@ Again, the model seemed to have identified something in the lungs area, and the 
 
 ## Conclusions
 
-Although the final model has achieved very high performance scores across the board (Accuracy, Recall, as well as Precision), Grad-CAM has showed us that the model is still picking up some regions outside the lungs area.
+Although the final model has achieved very high performance scores across the board (Accuracy, Recall, as well as Precision), Grad-CAM has showed us that the model is still picking up some regions outside the lungs area to identify Pneumonia.
 
 Rather than purely pursuing better metric scores, it'd be best to take advantage of experts' domain knowledge, and have these Grad-CAM outputs reviewed by clinicians and radiologists who can provide input on whether or not the model has identified correct/potential regions the chest area that might be indicators of Pneumonia.
 
 ### Next Steps
 
 In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar annotations, which could be very labor intensive and costly.
+
+Furthermore, there's potential in developing models that can assist in classifying responsible pathogens for Pneumonia.
