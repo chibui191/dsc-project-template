@@ -42,7 +42,7 @@ Diagnosis of Pneumonia often starts with medical history and self reported sympt
 
 ## Business Problem
 
-Pneumonia remains a common condition associated with considerable morbidity and mortality - each year it affects approximately 450 million people, and results in about 4 million deaths. Outcome is often improved by early diagnosis, while the traditional radiograph assessment usually introduces a delay to the diagnosis and treatment. Therefore, fast and reliable computer-aided diagnosis of the disease based on chest X-ray could be a critical step in improving the outcomes for Pneumonia patients. 
+Pneumonia remains a common condition associated with considerable morbidity and mortality - each year it affects approximately 450 million people, and results in about 4 million deaths. Outcome is often improved by early diagnosis, yet the traditional radiograph assessment usually introduces a delay to the diagnosis and treatment. Therefore, fast and reliable computer-aided diagnosis of the disease based on chest X-ray could be a critical step in improving the outcomes for Pneumonia patients. 
 
 For this project, I have developed and evaluated various Convolutional Neural Networks that can quickly classify Normal vs. Pneumonia frontal chest radiographs. The implementation of these models could help alert doctors and radiologists of potential abnormal pulmonary patterns, and expedite the diagnosis.
 
@@ -368,5 +368,8 @@ Rather than purely pursuing better metric scores, it'd be best to take advantage
 ### Next Steps
 
 In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar annotations, which could be very labor intensive and costly.
+<<<<<<< HEAD
 
 Furthermore, there's potential in developing models that can assist in classifying responsible pathogens for Pneumonia.
+=======
+>>>>>>> 5d486ca5bbaf07aef05fee8d52a33d5a50b65b1b
