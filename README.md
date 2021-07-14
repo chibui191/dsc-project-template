@@ -368,3 +368,11 @@ Rather than purely pursuing better metric scores, it'd be best to take advantage
 ### Next Steps
 
 In the future I would want to consider incorporating Object Detection/Localization into the models so that the output would not only be whether or not the X-ray exhibit abnormal pulmonary patterns typically observed in Pneumonia, but also the location of the identified patterns. However, this types of tasks usually requires data that have been labeled with bounding boxes or similar Furthermore, there's potential in developing models that can assist in classifying responsible pathogens for Pneumonia.
+
+
+## References
+1. Géron, A. (2019). *In Hands-on machine learning with Scikit-Learn &amp; TensorFlow: concepts, tools, and techniques to build intelligent systems.* O'Reilly Media, Inc. 
+2. https://machinelearningmastery.com/how-to-use-transfer-learning-when-developing-convolutional-neural-network-models/
+3. https://www.kaggle.com/suniliitb96/tutorial-keras-transfer-learning-with-resnet50
+4. https://towardsdatascience.com/deep-learning-using-transfer-learning-python-code-for-resnet50-8acdfb3a2d38
+5. [Wikipedia](https://en.wikipedia.org/wiki/Pneumonia)
